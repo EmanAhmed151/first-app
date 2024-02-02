@@ -33,7 +33,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView>
       <View style={{ paddingLeft: 120, paddingTop: 100 }}>
-        <Text style={{ color: 'purple' ,fontSize:30,textDecorationLine:'underline'}}>TODO APP</Text>
+        <Text style={{ color: 'purple' ,fontSize:30,textDecorationLine:'underline'}}> TODO APP </Text>
         <TextInput 
           placeholder='Enter title'
           value={titleInput}
