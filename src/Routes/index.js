@@ -20,9 +20,9 @@ const HomeStack = () => (
 );
 
 const Navigation = () => (
-  <NavigationContainer>
-    <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeStack} />
+  <NavigationContainer >
+    <Tab.Navigator screenOptions={{headerShown:false}}>
+      <Tab.Screen  name="Home"  component={HomeStack} />
       <Tab.Screen name="Completed" component={CompletedScreen} />
      
     </Tab.Navigator>
