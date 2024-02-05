@@ -1,125 +1,96 @@
 
-
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, SafeAreaView ,Alert} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, View, TouchableOpacity, FlatList, StyleSheet, Alert, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { styles } from '../../utils/styles';
+
+import { useDispatch } from 'react-redux';
+import { addCompletedTodo, removeCompletedTodo } from '../Redux/slices/slice.completedTodos';
+import { addUncompletedTodo, removeUncompletedTodo } from '../Redux/slices/slice.uncompletedTodos';
+import TodoForm from '../Components/TodoForm';
 
 
-const Item = ({ title, description, onPress , onDelete ,onToggleComplete, completed }) => (
-  <TouchableOpacity onPress={onPress} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-    <View>
-      <Text style={{color:'purple'}}>Title: {title}</Text>
-      <Text style={{color:'purple'}}>Description: {description}</Text>
-    </View>
-    <View style={{ flexDirection: 'row', alignItems: 'center' ,justifyContent: 'space-between' }}>
-    <TouchableOpacity onPress={onToggleComplete}>
-        {completed ? (
-          <Icon name="check-square-o" size={20} color="green" style={{ marginRight: 20 ,marginLeft:20}} />
-        ) : (
-          <Icon name="square-o" size={20} color="purple" style={{ marginRight: 20,marginLeft:20 }} />
-        )}
-      </TouchableOpacity>
-       <TouchableOpacity onPress={onDelete} style={{marginRight: 20,marginLeft:20}}>
-      <Icon name="trash" size={20} color="purple" />
-       </TouchableOpacity>
-     
-    </View>
-    
-  </TouchableOpacity>
-);
+
 
 const HomeScreen = ({ navigation }) => {
   const [todos, setTodos] = useState([]);
-  const [titleInput, setTitleInput] = useState('');
-  const [descriptionInput, setDescriptionInput] = useState('');
+  const [alertShown, setAlertShown] = useState(false);
+  const dispatch = useDispatch();
 
+  
 
-  const handleAddTodo = () => {
-    if (titleInput && descriptionInput) {
-     
-      const isTodoExists = todos.some(todo =>
-        todo.title === titleInput && todo.description === descriptionInput
+  const addTask = (task) => {
+    setTodos((prevTodos) => [...prevTodos, task]);
+    dispatch(addUncompletedTodo(task)); 
+  };
+
+  const toggleComplete = (title) => {
+    setTodos((prevTodos) => {
+      const updatedTodos = prevTodos.map((todo) =>
+        todo.title === title ? { ...todo, completed: !todo.completed } : todo
       );
   
-      if (!isTodoExists) {
-        const newTodo = {
-          title: titleInput,
-          description: descriptionInput,
-          completed: false,
-        };
+      const todoToToggle = updatedTodos.find((todo) => todo.title === title);
   
-        setTodos((prevTodos) => [...prevTodos, newTodo]);
-        setTitleInput('');
-        setDescriptionInput('');
-      } else {
-        
-          alert(
-            'Already exist..!',
-            
-          );
- 
-       
-      }
-    }
-  };
-  const handleDeleteTodo = (index) => {
-    const updatedTodos = [...todos];
-    updatedTodos.splice(index, 1);
-    setTodos(updatedTodos);
-  };
-
-  const handleToggleComplete = (index) => {
-    const updatedTodos = [...todos];
-    updatedTodos[index].completed = !updatedTodos[index].completed;
-
-    if (updatedTodos[index].completed) {
+      if (todoToToggle) {
+        if (todoToToggle.completed) {
       
-     
-    }
-
-    setTodos(updatedTodos);
+          dispatch(removeUncompletedTodo(todoToToggle));
+          dispatch(addCompletedTodo({ ...todoToToggle, completed: true }));
+        } else {
+         
+          dispatch(removeCompletedTodo(todoToToggle));
+          dispatch(addUncompletedTodo({ ...todoToToggle, completed: false }));
+        }
+  
+        return updatedTodos;
+      }
+  
+      return prevTodos;
+    });
   };
+  
 
-
+  const removeTask = (title) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.title !== title));
+    dispatch(removeUncompletedTodo({ title })); 
+    dispatch(removeCompletedTodo({ title })); 
+  };
 
   return (
-    <SafeAreaView>
-      <View style={ { alignItems:'center'} } >
-        <Text style={{ color: 'purple' ,fontWeight:600,fontSize:30,textDecorationLine:'underline'}}> TODO APP </Text>
-        <TextInput style={styles.input}
-          placeholder='Enter title'
-          value={titleInput}
-          onChangeText={(text) => setTitleInput(text)}
-        />
-        <TextInput style={styles.input}
-          placeholder='Enter description'
-          value={descriptionInput}
-          onChangeText={(text) => setDescriptionInput(text)}
-        />
-        <TouchableOpacity onPress={handleAddTodo} >
-          <Text style={{  color: 'purple'  ,fontWeight:500,fontSize:30 }}>Add</Text>
-        </TouchableOpacity>
-        <View style={styles.dividerLine}></View>
-        <FlatList
-          data={todos}
-          renderItem={({ item ,index}) => (
-            <Item
-              title={item.title}
-              description={item.description}
-              completed={item.completed}
+    <View style={ { alignItems:'center'} }>
+      <Text style={{ color: 'purple' ,fontWeight:600,fontSize:30,textDecorationLine:'underline'}}>TODO App</Text>
+      <TodoForm todos={todos} onAddTask={addTask} />
+      <FlatList
+        data={todos}
+        renderItem={({ item }) => (
+          <View >
+            <TouchableOpacity style={styles.iconContainer} onPress={() => toggleComplete(item.title)}>
+              <Icon
+                name={item.completed ? 'check-circle' : 'circle'}
+                size={20}
+                color={item.completed ? 'green' : 'grey'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => navigation.navigate('Details', { todo: item })}
-              onDelete={() => handleDeleteTodo(index)}
-              onToggleComplete={() => handleToggleComplete(index)}
-              
-            />
-          )}
-          keyExtractor={(item) => item.title}
-        />
-      
-      </View>
-    </SafeAreaView>
+              style={styles.contentContainer}
+            >
+              <View>
+                <Text >{item.title}</Text>
+                <Text>{item.description}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconContainer} onPress={() => removeTask(item.title)}>
+              <Icon name="trash" size={20} color="purple" />
+            </TouchableOpacity>
+          </View>
+        )}
+        keyExtractor={(item) => item.title}
+      />
+    </View>
   );
 };
+
+
 
 export default HomeScreen;

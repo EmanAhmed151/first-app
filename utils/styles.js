@@ -15,6 +15,14 @@ export const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
+  iconContainer: {
+    flexDirection: 'row',
+    padding: 10,
+  },
+  contentContainer: {
+    flex: 1,
+    marginLeft: 10,
+  },
   submitBtn: {
     width: "50%",
     backgroundColor: "#000",
